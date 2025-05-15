@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Scanner;
 
 public class User {
@@ -14,73 +12,6 @@ public class User {
     private int mood;
 
     public User() {
-
-//        while (true) {
-//            System.out.println("Number of Rows:");
-//            int tmp;
-//
-//            try {
-//                tmp = scanner.nextInt();
-//
-//                if (tmp <= 0) {
-//                    System.out.println("Number of rows should be a positive integer");
-//                } else {
-//                    this.rows = tmp;
-//
-//                    break;
-//                }
-//            } catch (Exception e) {
-//                System.out.println("Wrong Input Type, You Should Enter an Integer!");
-//                scanner.nextLine();
-//            }
-//        }
-
-//        this.rows = level.getRows();
-
-//        while (true) {
-//            System.out.println("Number of Columns:");
-//            int tmp;
-//
-//            try {
-//                tmp = scanner.nextInt();
-//
-//                if (tmp <= 0) {
-//                    System.out.println("Number of columns should be a positive integer");
-//                } else {
-//                    this.columns = tmp;
-//
-//                    break;
-//                }
-//            } catch (Exception e) {
-//                System.out.println("Wrong Input Type, You Should Enter an Integer!");
-//                scanner.nextLine();
-//            }
-//        }
-
-//        this.columns = level.getColumns();
-
-//        while (true) {
-//            System.out.println("Please Enter Number of Steps You Can Move:");
-//
-//            int tmp;
-//
-//            try {
-//                tmp = scanner.nextInt();
-//
-//                if (tmp < 0) {
-//                    System.out.println("Number of Steps Should Be a Positive Integer, Try Again!");
-//                } else {
-//                    this.steps = tmp;
-//
-//                    break;
-//                }
-//            } catch (Exception e) {
-//                System.out.println("Wrong Input Type, You Should Enter an Integer!");
-//                scanner.nextLine();
-//            }
-//        }
-
-//        this.steps = level.getSteps();
     }
 
     public int getRows() {
@@ -206,12 +137,6 @@ public class User {
         JList<Integer> numberList = new JList<>(listModel);
         numberList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-//        numberList.addListSelectionListener(e -> {
-//            if (!e.getValueIsAdjusting()) {
-//                System.out.println("Selected number: " + numberList.getSelectedValue());
-//            }
-//        });
-
         JScrollPane scrollPane = new JScrollPane(numberList);
         scrollPane.setPreferredSize(new Dimension(1, 10));
 
@@ -251,7 +176,7 @@ public class User {
 
                 state.initialState(getBoard(), move);
                 frame.dispose();
-                inputMood(state, move);
+                inputMood(state, move, level);
             } else {
                 System.out.println("No number selected.");
             }
@@ -262,103 +187,97 @@ public class User {
         return buttonPanel;
     }
 
-    public void inputMood(State state, Movement move) {
+    public void inputMood(State state, Movement move, Level level) {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        JFrame frame = new JFrame("Choose Mood");
+        JFrame frame = new JFrame("Choose Solving Mode");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(screenSize.width, screenSize.height);
-        frame.setLayout(new GridLayout(3, 3));
+        frame.setLayout(new BorderLayout());
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        frame.setVisible(true);
 
-        JLabel descriptionLabel = new JLabel("""
-            Please Choose an Option to Solve This Board by:""");
-        descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        descriptionLabel.setVerticalAlignment(SwingConstants.BOTTOM);
+        // --- Top panel with back button and title ---
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        topPanel.setBackground(new Color(245, 245, 245)); // Light gray background
 
-        Font labelFont = descriptionLabel.getFont();
-        descriptionLabel.setFont(new Font(labelFont.getName(), Font.PLAIN, 18));
+        JButton backButton = new JButton("← Back");
+        backButton.setFocusPainted(false);
+        backButton.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        backButton.setBackground(new Color(230, 230, 230));
+        backButton.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            selectLevel(level); // navigate back
+        });
 
-        String[] options = {
-                "BFS - Breadth First Search",
-                "UCS - Uniform Cost Search",
-                "UCS According to the Magnet's type",
-                "Hill Climbing",
-                "A* - A Star",
-                "Manually"
-        };
+        JLabel titleLabel = new JLabel("Select a Solving Algorithm");
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        titleLabel.setForeground(new Color(50, 50, 50));
+
+        topPanel.add(backButton, BorderLayout.WEST);
+        topPanel.add(titleLabel, BorderLayout.CENTER);
+
+        // --- Center panel with dropdown and button ---
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(80, 100, 100, 100));
+
+        JLabel instructionLabel = new JLabel("Please choose an option to solve the board:");
+        instructionLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        instructionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        instructionLabel.setForeground(new Color(80, 80, 80));
+
+        String[] options = {"BFS - Breadth First Search", "UCS - Uniform Cost Search", "UCS According to the Magnet's Type", "Hill Climbing", "A* - A Star"};
 
         JComboBox<String> comboBox = new JComboBox<>(options);
-        JPanel comboBoxPanel = new JPanel();
-        comboBoxPanel.setPreferredSize(new Dimension(200, 5));
+        comboBox.setMaximumSize(new Dimension(400, 35));
+        comboBox.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        comboBox.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton selectButton = new JButton("Select Mood");
+        JButton selectButton = new JButton("Start Solving");
+        selectButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        selectButton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        selectButton.setBackground(new Color(66, 133, 244));
+        selectButton.setForeground(Color.WHITE);
+        selectButton.setFocusPainted(false);
+        selectButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
         selectButton.addActionListener(e -> {
             int selectedIndex = comboBox.getSelectedIndex();
 
-            if (selectedIndex >= 0 && selectedIndex < 6) {
+            if (selectedIndex >= 0 && selectedIndex < 5) {
                 frame.dispose();
                 setMood(selectedIndex + 1);
 
                 Algorithms algorithm = new Algorithms();
-                if (getMood() == 1) {
-                    algorithm.BFS(state.getBoard(), state, move);
-                } else if (getMood() == 2) {
-                    algorithm.UCS(state.getBoard(), state, move);
-                } else if (getMood() == 3) {
-                    algorithm.UCSAccordingToMagnetType(state.getBoard(), state, move);
-                } else if (getMood() == 4) {
-                    algorithm.hillClimbing(state.getBoard(), state, move);
-                } else if (getMood() == 5) {
-                    algorithm.AStar(state.getBoard(), state, move);
-                } else if (getMood() == 6) {
-//                    state.generateALlSates(state.getBoard(), move);
-//                    state.printBoard();
-
-                    playManually(state, move);
-
-//                    JPanel boardPanel = new JPanel(new GridLayout(1, 1));
-//
-//                    frame.setLayout(new GridLayout(1, 1));
-//                    state.displayBoard(boardPanel, state.getBoard(), state.getRows(), state.getColumns());
-//                    frame.add(boardPanel);
-//
-//                    while (true) {
-//                        if (!move.checkGoalState(state.getBoard()) && getSteps() >= 1) {
-//                            int[] step = userStep(state.getBoard());
-//
-//                            move.changeMagnet(step[0], step[1], step[2], step[3], state.getBoard());
-//                            state.printBoard();
-//                            setSteps(getSteps() - 1);
-//                        } else if (move.checkGoalState(state.getBoard())) {
-//                            System.out.println("You ARE A WINNER! YEAH!");
-//
-//                            break;
-//                        } else if (getSteps() == 0) {
-//                            System.out.println("Sorry, You Have Used All Available Moves.\nGood Luck!");
-//
-//                            break;
-//                        }
-//                    }
+                switch (getMood()) {
+                    case 1 -> algorithm.BFS(state.getBoard(), this, state, level, move);
+                    case 2 -> algorithm.UCS(state.getBoard(), this, state, level, move);
+                    case 3 -> algorithm.UCSAccordingToMagnetType(state.getBoard(), this, state, level, move);
+                    case 4 -> algorithm.hillClimbing(state.getBoard(), this, state, level, move);
+                    case 5 -> algorithm.AStar(state.getBoard(), this, state, level, move);
                 }
             } else {
                 JOptionPane.showMessageDialog(frame, "Please select a valid option.");
             }
         });
 
-        comboBoxPanel.add(comboBox);
-        comboBoxPanel.add(selectButton);
+        // --- Assemble center layout ---
+        centerPanel.add(Box.createVerticalGlue());
+        centerPanel.add(instructionLabel);
+        centerPanel.add(Box.createVerticalStrut(20));
+        centerPanel.add(comboBox);
+        centerPanel.add(Box.createVerticalStrut(30));
+        centerPanel.add(selectButton);
+        centerPanel.add(Box.createVerticalGlue());
 
-        frame.add(new Label());
-        frame.add(descriptionLabel);
-        frame.add(new Label());
-        frame.add(new Label());
-        frame.add(comboBoxPanel);
-        frame.add(new Label());
-        frame.add(new Label());
-        frame.add(new Label());
-        frame.add(new Label());
+        // --- Apply panels to frame ---
+        frame.add(topPanel, BorderLayout.NORTH);
+        frame.add(centerPanel, BorderLayout.CENTER);
+
+        frame.setVisible(true);
     }
 
 
@@ -373,7 +292,7 @@ public class User {
 
         JPanel boardPanel = new JPanel(new GridLayout(1, 1));
 
-        state.displayBoard(boardPanel, state.getBoard(), state.getRows(), state.getColumns());
+        state.displayBoard(boardPanel, state.getBoard(), state.getRows(), state.getColumns(), move);
 
         frame.add(new Label());
         frame.add(new Label());
@@ -388,23 +307,20 @@ public class User {
         frame.setVisible(true);
 
         while (true) {
-//            if (!move.checkGoalState(state.getBoard()) && getSteps() >= 1) {
-//                int[] step = userStep(state.getBoard());
-////
-////                move.changeMagnet(step[0], step[1], step[2], step[3], state.getBoard());
-////                state.printBoard();
-////                setSteps(getSteps() - 1);
-//            } else if (move.checkGoalState(state.getBoard())) {
-//                System.out.println("You ARE A WINNER! YEAH!");
-//
-//                break;
-//            } else if (getSteps() == 0) {
-//                System.out.println("Sorry, You Have Used All Available Moves.\nGood Luck!");
-//
-//                break;
-//            }
+            if (!move.checkGoalState(state.getBoard()) && getSteps() >= 1) {
+                int[] step = userStep(state.getBoard());
+            } else if (move.checkGoalState(state.getBoard())) {
+                System.out.println("You ARE A WINNER! YEAH!");
+
+                break;
+            } else if (getSteps() == 0) {
+                System.out.println("Sorry, You Have Used All Available Moves.\nGood Luck!");
+
+                break;
+            }
         }
     }
+
     public int[] userStep(char[][] board) {
         int[] step = new int[4];
 

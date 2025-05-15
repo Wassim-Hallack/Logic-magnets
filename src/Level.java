@@ -15,7 +15,6 @@ public class Level {
     public Level(boolean start) {
         if (start) {
             this.readLevels();
-//            this.printLevels();
         }
     }
 
@@ -57,7 +56,6 @@ public class Level {
                 String token = scanner.next();
 
                 if (Objects.equals(token, "Level")) {
-//                    System.out.println(currentBoard);
                     // Read the level number.
                     token = scanner.next();
 
@@ -67,18 +65,6 @@ public class Level {
                     newLevel.columns = currentColumns;
                     newLevel.steps = currentSteps;
                     newLevel.board = String.valueOf(currentBoard);
-//                    for (int i = 0; i < currentBoard.length();) {
-//                        if (i != 0) {
-//                            newLevel.board += " ";
-//                        }
-//
-//                        newLevel.board += currentBoard.charAt(i);
-//
-//                        i++;
-//                        if(i < currentBoard.length() && currentBoard.charAt(i) != ' ') {
-//                            newLevel.board += currentBoard.charAt(i);
-//                        }
-//                    }
 
                     this.levels.add(newLevel);
 
@@ -94,7 +80,7 @@ public class Level {
                     currentSteps = Integer.parseInt(token);
                     counter_token++;
                 } else if (counter_token >= 4) {
-                    if(counter_token != 4) {
+                    if (counter_token != 4) {
                         currentBoard.append(" ");
                     }
 

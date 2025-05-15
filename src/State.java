@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class State {
+    Border goalBorder = new LineBorder(Color.GREEN, 5);
     private final int rows, columns;
     private final char[][] board;
 
@@ -46,8 +49,6 @@ public class State {
     public void initialState(String tmp_board, Movement move) {
         int string_index = 0;
         int tmp_board_length = tmp_board.length();
-//        System.out.println("tmp_board_length: " + tmp_board_length);
-//        System.out.println("tmp_board: " + tmp_board);
 
         for (int i = 1; (i <= rows && string_index < tmp_board_length); i++) {
             for (int j = 1; (j <= columns && string_index < tmp_board_length); j++) {
@@ -65,8 +66,6 @@ public class State {
                     type.append(tmp_board.charAt(string_index));
                     string_index++;
                 }
-
-//                System.out.println("type: " + type);
 
                 try {
                     if (type.charAt(0) == 'B' || type.charAt(0) == 'R' || type.charAt(0) == 'A' || type.charAt(0) == 'S' || type.charAt(0) == 'G' || type.charAt(0) == 'O') {
@@ -163,9 +162,9 @@ public class State {
         }
     }
 
-    public void displayBoard(JPanel panel, char[][] pathArray, int rows, int columns) {
+    public void displayBoard(JPanel panel, char[][] pathArray, int rows, int columns, Movement movement) {
         panel.removeAll();
-        panel.setLayout(new GridLayout(rows, columns));
+        panel.setLayout(new GridLayout(rows, columns, 2, 2)); // Added spacing between cells
 
         for (int i = 1; i <= rows; i++) {
             for (int j = 1; j <= columns; j++) {
@@ -174,6 +173,18 @@ public class State {
                 label.setBackground(this.characterColorMap.get(pathArray[i][j]));
                 label.setHorizontalAlignment(SwingConstants.CENTER);
                 label.setVerticalAlignment(SwingConstants.CENTER);
+                label.setPreferredSize(new Dimension(60, 60));
+                label.setFont(new Font("SansSerif", Font.BOLD, 16));
+                label.setForeground(Color.BLACK);
+
+                // Highlight goal cells
+                for (CustomPair goal : movement.goals) {
+                    if (goal.first() == i && goal.second() == j) {
+                        label.setBorder(BorderFactory.createLineBorder(Color.GREEN, 5));
+                        break;
+                    }
+                }
+
                 panel.add(label);
             }
         }
@@ -181,4 +192,5 @@ public class State {
         panel.revalidate();
         panel.repaint();
     }
+
 }

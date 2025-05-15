@@ -1,93 +1,165 @@
-import javax.crypto.spec.DESedeKeySpec;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
 
 public class Algorithms {
-    public void displaySolutionInfo(String algorithmName, long duration, int numOfVisitedState, int pathDepth, List<char[][]> path, State state) {
+    public void displaySolutionInfo(String algorithmName, long duration, int numOfVisitedState, int pathDepth, List<char[][]> path, User user, State state, Level level, Movement movement) {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        JFrame frame = new JFrame("Solution");
+        JFrame frame = new JFrame("Solution Viewer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(screenSize.width, screenSize.height);
-        frame.setLayout(new GridLayout(3, 3));
+        frame.setLayout(new BorderLayout());
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
-        JLabel descriptionLabel = new JLabel("The solution using " + algorithmName + " algorithm can be like this:");
-        descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        descriptionLabel.setVerticalAlignment(SwingConstants.CENTER);
+        // --- Top Panel with Back Button and Title ---
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        topPanel.setBackground(new Color(245, 245, 245));
 
-        Font labelFont = descriptionLabel.getFont();
-        descriptionLabel.setFont(new Font(labelFont.getName(), Font.PLAIN, 22));
+        JButton backButton = new JButton("← Back");
+        backButton.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        backButton.setFocusPainted(false);
+        backButton.setBackground(new Color(230, 230, 230));
+        backButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            user.inputMood(state, movement, level);
+        });
 
-        JLabel infoLabel = new JLabel("<html>Execution Time: " + duration + " milliseconds<br/>Number of visited states: " + numOfVisitedState + "<br/>Solution Depth: " + pathDepth);
-        infoLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        infoLabel.setVerticalAlignment(SwingConstants.CENTER);
-        infoLabel.setFont(new Font(labelFont.getName(), Font.PLAIN, 20));
+        JLabel titleLabel = new JLabel("Solution Using " + algorithmName);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setForeground(new Color(50, 50, 50));
 
+        topPanel.add(backButton, BorderLayout.WEST);
+        topPanel.add(titleLabel, BorderLayout.CENTER);
+
+        // --- Path Panel ---
         JPanel pathPanel = new JPanel(new GridLayout(1, 1));
-
         final int[] currentIndex = {1};
+        state.displayBoard(pathPanel, path.get(currentIndex[0]), state.getRows(), state.getColumns(), movement);
 
-        state.displayBoard(pathPanel, path.get(currentIndex[0]), state.getRows(), state.getColumns());
+        // --- Info Panel (Right Side) ---
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 40));
 
-        JPanel twoButton = new JPanel();
-        JButton prevButton = new JButton("< Previous");
-        JButton nextButton = new JButton("Next >");
-        twoButton.add(prevButton);
-        twoButton.add(nextButton);
+        JLabel infoLabel = new JLabel("<html><b>Execution Time:</b> " + duration + " ms<br/><br/>" +
+                "<b>Visited States:</b> " + numOfVisitedState + "<br/><br/>" +
+                "<b>Solution Depth:</b> " + pathDepth + "</html>");
+        infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        infoLabel.setForeground(new Color(60, 60, 60));
+
+        infoPanel.add(infoLabel);
+
+        // --- Navigation Buttons ---
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        navPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+
+        JButton prevButton = new JButton("← Previous");
+        JButton nextButton = new JButton("Next →");
+
+        Font navFont = new Font("SansSerif", Font.BOLD, 16);
+        prevButton.setFont(navFont);
+        nextButton.setFont(navFont);
+
+        prevButton.setFocusPainted(false);
+        nextButton.setFocusPainted(false);
+
+        prevButton.setBackground(new Color(220, 220, 220));
+        nextButton.setBackground(new Color(66, 133, 244));
+        nextButton.setForeground(Color.WHITE);
 
         prevButton.addActionListener(e -> {
             if (currentIndex[0] > 1) {
                 currentIndex[0]--;
-                state.displayBoard(pathPanel, path.get(currentIndex[0]), state.getRows(), state.getColumns());
+                state.displayBoard(pathPanel, path.get(currentIndex[0]), state.getRows(), state.getColumns(), movement);
             }
         });
 
         nextButton.addActionListener(e -> {
-            if (currentIndex[0] <= path.size() - 2) {
+            if (currentIndex[0] < path.size() - 1) {
                 currentIndex[0]++;
-                state.displayBoard(pathPanel, path.get(currentIndex[0]), state.getRows(), state.getColumns());
+                state.displayBoard(pathPanel, path.get(currentIndex[0]), state.getRows(), state.getColumns(), movement);
             }
         });
 
-        frame.add(new Label());
-        frame.add(descriptionLabel);
-        frame.add(new Label());
-        frame.add(new Label());
-        frame.add(pathPanel);
-        frame.add(infoLabel);
-        frame.add(new Label());
-        frame.add(twoButton);
-        frame.add(new Label());
+        navPanel.add(prevButton);
+        navPanel.add(nextButton);
+
+        // --- Center Panel with Path & Navigation ---
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 20));
+        centerPanel.add(pathPanel, BorderLayout.CENTER);
+        centerPanel.add(navPanel, BorderLayout.SOUTH);
+
+        // --- Add Panels to Frame ---
+        frame.add(topPanel, BorderLayout.NORTH);
+        frame.add(centerPanel, BorderLayout.CENTER);
+        frame.add(infoPanel, BorderLayout.EAST);
 
         frame.setVisible(true);
     }
 
-    public void displayMessage(String message) {
+
+    public void displayMessage(String message, User user, State state, Movement move, Level level) {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        JFrame frame = new JFrame("Logic Magnets");
+        JFrame frame = new JFrame("Logic Magnets - Message");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(screenSize.width, screenSize.height);
-        frame.setLayout(new GridLayout(1, 1));
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setLayout(new BorderLayout());
+        frame.getContentPane().setBackground(Color.WHITE);
 
-        JLabel descriptionLabel = new JLabel(message);
-        descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        descriptionLabel.setVerticalAlignment(SwingConstants.CENTER);
+        // --- Top Bar with Back Button ---
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
 
-        Font labelFont = descriptionLabel.getFont();
-        descriptionLabel.setFont(new Font(labelFont.getName(), Font.PLAIN, 22));
+        JButton backButton = new JButton("← Back");
+        backButton.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        backButton.setFocusPainted(false);
+        backButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        backButton.setBackground(new Color(240, 240, 240));
+        backButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        frame.add(descriptionLabel);
+        backButton.addActionListener(e -> {
+            frame.dispose();
+
+            user.inputMood(state, move, level); // Go back to the previous screen
+        });
+
+        topPanel.add(backButton, BorderLayout.WEST);
+
+        // --- Message Panel ---
+        JPanel messagePanel = new JPanel();
+        messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
+        messagePanel.setBorder(BorderFactory.createEmptyBorder(100, 100, 100, 100));
+        messagePanel.setBackground(new Color(250, 250, 250));
+
+        JLabel messageLabel = new JLabel("<html><div style='text-align: center;'>" + message + "</div></html>");
+        messageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        messageLabel.setVerticalAlignment(SwingConstants.CENTER);
+        messageLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+        messageLabel.setForeground(new Color(50, 50, 50));
+
+        messagePanel.add(Box.createVerticalGlue());
+        messagePanel.add(messageLabel);
+        messagePanel.add(Box.createVerticalGlue());
+
+        // --- Add components to frame ---
+        frame.add(topPanel, BorderLayout.NORTH);
+        frame.add(messagePanel, BorderLayout.CENTER);
+
         frame.setVisible(true);
     }
 
-    public void BFS(char[][] initialState, State state, Movement move) {
+
+    public void BFS(char[][] initialState, User user, State state, Level level, Movement move) {
         long startTime = System.nanoTime();
 
         Queue<char[][]> queue = new LinkedList<>();
@@ -160,7 +232,7 @@ public class Algorithms {
                     }
                 }
 
-                displaySolutionInfo("BFS", duration, visited.size(), (path.size() - 2), path, state);
+                displaySolutionInfo("BFS", duration, visited.size(), (path.size() - 2), path, user, state, level, move);
                 break;
             }
 
@@ -195,7 +267,7 @@ public class Algorithms {
         }
     }
 
-    public void UCS(char[][] initialState, State state, Movement move) {
+    public void UCS(char[][] initialState, User user, State state, Level level, Movement move) {
         long startTime = System.nanoTime();
         NodeComparator comparator = new NodeComparator();
         PriorityQueue<Node> queue = new PriorityQueue<>(10, comparator);
@@ -271,7 +343,7 @@ public class Algorithms {
                     }
                 }
 
-                displaySolutionInfo("UCS", duration, visited.size(), (path.size() - 2), path, state);
+                displaySolutionInfo("UCS", duration, visited.size(), (path.size() - 2), path, user, state, level, move);
                 break;
             }
 
@@ -302,7 +374,7 @@ public class Algorithms {
 
     /* This Algorithm Make Node's Cost += 1 If R Magnet Was Moved
     or Cost += 2 If A Magnet Was Moved */
-    public void UCSAccordingToMagnetType(char[][] initialState, State state, Movement move) {
+    public void UCSAccordingToMagnetType(char[][] initialState, User user, State state, Level level, Movement move) {
         long startTime = System.nanoTime();
         NodeComparator comparator = new NodeComparator();
         PriorityQueue<Node> queue = new PriorityQueue<>(10, comparator);
@@ -378,7 +450,7 @@ public class Algorithms {
                     }
                 }
 
-                displaySolutionInfo("UCS", duration, visited.size(), (path.size() - 2), path, state);
+                displaySolutionInfo("UCS", duration, visited.size(), (path.size() - 2), path, user, state, level, move);
                 break;
             }
 
@@ -423,7 +495,7 @@ public class Algorithms {
         return totalCost;
     }
 
-    public void hillClimbing(char[][] initialState, State state, Movement move) {
+    public void hillClimbing(char[][] initialState, User user, State state, Level level, Movement move) {
         long startTime = System.nanoTime();
         boolean answer = true;
 
@@ -471,7 +543,7 @@ public class Algorithms {
 
         if (!answer) {
             System.out.println("Solution Was Not Found!");
-            displayMessage("Solution was not found using Hill Climbing Algorithm.");
+            displayMessage("Solution was not found using Hill Climbing Algorithm.", user, state, move, level);
             return;
         }
 
@@ -493,10 +565,10 @@ public class Algorithms {
             }
         }
 
-        displaySolutionInfo("Hill Climbing", duration, (path.size() - 2), (path.size() - 2), path, state);
+        displaySolutionInfo("Hill Climbing", duration, (path.size() - 2), (path.size() - 2), path, user, state, level, move);
     }
 
-    public void AStar(char[][] initialState, State state, Movement move) {
+    public void AStar(char[][] initialState, User user, State state, Level level, Movement move) {
         long startTime = System.nanoTime();
         NodeComparator comparator = new NodeComparator();
         PriorityQueue<Node> queue = new PriorityQueue<>(10, comparator);
@@ -572,7 +644,7 @@ public class Algorithms {
                     }
                 }
 
-                displaySolutionInfo("A*", duration, (path.size() - 2), (path.size() - 2), path, state);
+                displaySolutionInfo("A*", duration, (path.size() - 2), (path.size() - 2), path, user, state, level, move);
                 break;
             }
 
